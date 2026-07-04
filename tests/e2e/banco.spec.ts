@@ -68,7 +68,8 @@ test.describe("Banco tab", () => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
     if (count === 0) {
-      test.skip(true, "No videos in DB — skipping modal test");
+      // CI starts with empty DB — skip this test gracefully
+      test.skip();
       return;
     }
 
@@ -82,7 +83,7 @@ test.describe("Banco tab", () => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
     if (count === 0) {
-      test.skip(true, "No videos in DB");
+      test.skip();
       return;
     }
     await rows.first().click();
@@ -97,7 +98,7 @@ test.describe("Banco tab", () => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
     if (count === 0) {
-      test.skip(true, "No videos in DB");
+      test.skip();
       return;
     }
     await rows.first().click();
