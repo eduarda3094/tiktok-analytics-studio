@@ -13,6 +13,7 @@ jobs:
     env:
       TEST_DB_PATH: /home/runner/work/test.db
       DATABASE_URL: file:/home/runner/work/test.db
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,11 +47,21 @@ jobs:
         continue-on-error: true
 
       # Option 1: SonarCloud (free for public repos, recommended)
+      # Requires SONAR_TOKEN secret in repo settings.
+      # Create at: https://sonarcloud.io > My Account > Security > Generate Tokens
+      # Then add as repo secret: Settings > Secrets and variables > Actions > New secret
       - name: SonarCloud Scan
+        if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Skip SonarCloud (no token)
+        if: ${{ env.SONAR_TOKEN == '' }}
+        run: |
+          echo "::warning title=SonarCloud::SONAR_TOKEN secret not configured. Skipping SonarCloud scan."
+          echo "To enable: create a token at https://sonarcloud.io and add it as SONAR_TOKEN in repo Settings > Secrets > Actions"
 
       # Option 2: Self-hosted SonarQube (uncomment if running own server)
       # - name: SonarQube Scan
