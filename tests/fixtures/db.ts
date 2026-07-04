@@ -54,7 +54,7 @@ export async function setupTestDb(): Promise<PrismaClient> {
   }
   globalForPrisma.prisma = prisma;
 
-  // Clean any existing data so each test run starts fresh
+  // Clean ALL data so the test DB starts completely fresh
   await prisma.video.deleteMany({});
   await prisma.scrapeJob.deleteMany({});
 

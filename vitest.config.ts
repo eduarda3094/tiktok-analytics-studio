@@ -34,11 +34,8 @@ export default defineConfig({
     // Run tests sequentially (not in parallel) — integration tests share
     // the same SQLite DB and would collide if run concurrently
     pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    singleFork: true,
+    fileParallelism: false,
   },
   resolve: {
     alias: {
