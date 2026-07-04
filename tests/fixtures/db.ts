@@ -63,14 +63,17 @@ export async function setupTestDb(): Promise<PrismaClient> {
 
 /**
  * Seed the test database with fixture videos.
+ * Uses unique IDs based on timestamp + index to avoid collisions
+ * when re-seeding between tests.
  */
 export async function seedFixtureVideos(client: PrismaClient): Promise<string[]> {
   const ids: string[] = [];
+  const prefix = `test-${Date.now()}-`;
   const fixtures = [
     {
-      id: "test-video-1",
+      id: `${prefix}1`,
       videoUrl: "https://www.tiktok.com/@user1/video/111",
-      sourceId: "111",
+      sourceId: `111-${prefix}`,
       videoViews: 1000000,
       likes: 100000,
       comments: 5000,
@@ -93,9 +96,9 @@ export async function seedFixtureVideos(client: PrismaClient): Promise<string[]>
       source: "url",
     },
     {
-      id: "test-video-2",
+      id: `${prefix}2`,
       videoUrl: "https://www.tiktok.com/@user2/video/222",
-      sourceId: "222",
+      sourceId: `222-${prefix}`,
       videoViews: 500000,
       likes: 25000,
       comments: 1200,
@@ -118,9 +121,9 @@ export async function seedFixtureVideos(client: PrismaClient): Promise<string[]>
       source: "url",
     },
     {
-      id: "test-video-3",
+      id: `${prefix}3`,
       videoUrl: "https://www.tiktok.com/@user1/video/333",
-      sourceId: "333",
+      sourceId: `333-${prefix}`,
       videoViews: 2000000,
       likes: 300000,
       comments: 15000,

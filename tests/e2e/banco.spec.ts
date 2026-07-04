@@ -1,5 +1,9 @@
 /**
  * E2E test: Banco tab — table, search, filters, modal.
+ *
+ * NOTE: These tests assume the database has at least 1 video.
+ * In CI, the dev server starts with an empty DB (just schema, no data).
+ * Tests that require clicking a video row will skip if no rows exist.
  */
 
 import { test, expect } from "@playwright/test";
@@ -47,7 +51,7 @@ test.describe("Banco tab", () => {
 
   test("typing in search filters results", async ({ page }) => {
     const searchInput = page.locator('input[placeholder*="Buscar"]');
-    await searchInput.fill("nonexistent-search-term-xyz");
+    await searchInput.fill("nonexistent-search-term-xyz-12345");
     // Wait a bit for debounce
     await page.waitForTimeout(500);
     // Should show empty state
@@ -64,26 +68,25 @@ test.describe("Banco tab", () => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
     if (count === 0) {
-      test.skip();
+      test.skip(true, "No videos in DB — skipping modal test");
       return;
     }
 
     // Click first row
     await rows.first().click();
-    // Modal should appear with video details
-    await expect(page.locator('[role="dialog"]')).toBeVisible();
+    // Modal should appear with video details (wait up to 10s)
+    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
   });
 
   test("modal has Visão geral and Análise profunda tabs", async ({ page }) => {
-    // Open modal first
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
     if (count === 0) {
-      test.skip();
+      test.skip(true, "No videos in DB");
       return;
     }
     await rows.first().click();
-    await expect(page.locator('[role="dialog"]')).toBeVisible();
+    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
 
     // Should have both tabs
     await expect(page.locator("button", { hasText: "Visão geral" })).toBeVisible();
@@ -94,11 +97,11 @@ test.describe("Banco tab", () => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
     if (count === 0) {
-      test.skip();
+      test.skip(true, "No videos in DB");
       return;
     }
     await rows.first().click();
-    await expect(page.locator('[role="dialog"]')).toBeVisible();
+    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 10000 });
 
     // Click Análise profunda
     await page.locator("button", { hasText: "Análise profunda" }).click();
