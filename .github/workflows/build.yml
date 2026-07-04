@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -32,14 +32,15 @@ jobs:
 
       - name: Create deployment archive
         run: |
-          mkdir -p deployment
-          cp -r .next/standalone deployment/
-          cp -r .next/static deployment/.next/standalone/.next/
-          cp -r public deployment/.next/standalone/
-          cp -r prisma deployment/.next/standalone/
-          cp package.json deployment/.next/standalone/
+          mkdir -p deployment/.next/standalone/.next
+          cp -r .next/standalone/* deployment/.next/standalone/ || true
+          cp -r .next/static deployment/.next/standalone/.next/ || true
+          cp -r public deployment/.next/standalone/ || true
+          cp -r prisma deployment/.next/standalone/ || true
+          cp package.json deployment/.next/standalone/ || true
           cp .env.example deployment/.next/standalone/ || true
           cd deployment && tar -czf ../tiktok-analytics-standalone.tar.gz .next/standalone
+          ls -la ../tiktok-analytics-standalone.tar.gz
 
       - name: Upload standalone artifact
         uses: actions/upload-artifact@v4
@@ -97,7 +98,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies

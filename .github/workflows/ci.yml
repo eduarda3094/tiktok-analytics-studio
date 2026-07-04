@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -28,13 +28,16 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env:
+      TEST_DB_PATH: /home/runner/work/test.db
+      DATABASE_URL: file:/home/runner/work/test.db
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -48,14 +51,10 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Push test database
-        env:
-          DATABASE_URL: file:/home/runner/test.db
+      - name: Setup test database
         run: npx prisma db push --skip-generate
 
       - name: Run unit tests with coverage
-        env:
-          DATABASE_URL: file:/home/runner/test.db
         run: npm run test:coverage
 
       - name: Upload coverage artifact
@@ -69,13 +68,16 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    env:
+      TEST_DB_PATH: /home/runner/work/test.db
+      DATABASE_URL: file:/home/runner/work/test.db
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -89,9 +91,10 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Setup test database
+        run: npx prisma db push --skip-generate
+
       - name: Run integration tests
-        env:
-          DATABASE_URL: file:/tmp/test.db
         run: npx vitest run tests/integration/
 
   e2e-tests:
@@ -103,7 +106,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -148,7 +151,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies

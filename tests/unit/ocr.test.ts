@@ -10,11 +10,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
+import { EventEmitter } from "events";
 
 // Mock child_process spawn to avoid actually running ffmpeg/tesseract
 vi.mock("child_process", () => ({
   spawn: vi.fn((cmd: string, args: string[]) => {
-    const { EventEmitter } = require("events");
     const proc = new EventEmitter();
     (proc as any).stderr = new EventEmitter();
     (proc as any).stdout = new EventEmitter();

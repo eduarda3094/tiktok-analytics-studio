@@ -8,10 +8,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
+import { EventEmitter } from "events";
 
 vi.mock("child_process", () => ({
   spawn: vi.fn((cmd: string, args: string[]) => {
-    const { EventEmitter } = require("events");
     const proc = new EventEmitter();
     (proc as any).stderr = new EventEmitter();
     (proc as any).stdout = new EventEmitter();

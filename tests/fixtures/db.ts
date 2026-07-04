@@ -3,45 +3,61 @@
  *
  * Creates an isolated SQLite database for each test run, seeds it with
  * test fixtures, and exposes the Prisma client + helper functions.
+ *
+ * NOTE: This helper assumes the test DB has already been created by the
+ * test setup (either via npm script or GitHub Action step). It only
+ * connects to the existing DB and seeds fixture data.
  */
 
 import { PrismaClient } from "@prisma/client";
 import { promises as fs } from "fs";
 import path from "path";
 
-const TEST_DB_PATH = "/home/z/my-project/db/test.db";
+// Use an absolute test DB path. Resolves to <project>/db/test.db
+const PROJECT_ROOT = process.cwd();
+const TEST_DB_PATH = process.env.TEST_DB_PATH || path.join(PROJECT_ROOT, "db", "test.db");
 
 let prisma: PrismaClient | null = null;
 
 /**
- * Initialize the test database: delete any existing test.db, recreate schema,
- * seed with fixture data. Returns a connected PrismaClient.
+ * Connect to the test database. The DB schema must already exist
+ * (created by `npx prisma db push` in the test setup step).
+ *
+ * This also overrides the global PrismaClient used by src/lib/db.ts
+ * so that all modules (deep-analysis, etc.) use the test DB.
  */
 export async function setupTestDb(): Promise<PrismaClient> {
-  // Delete existing test DB
-  try { await fs.unlink(TEST_DB_PATH); } catch { /* ignore */ }
-  try { await fs.unlink(TEST_DB_PATH + "-journal"); } catch { /* ignore */ }
+  // Verify the DB file exists
+  try {
+    await fs.access(TEST_DB_PATH);
+  } catch {
+    throw new Error(
+      `Test DB not found at ${TEST_DB_PATH}. Run "npm run db:push:test" ` +
+      `before running tests.`
+    );
+  }
 
-  // Push schema to test DB
-  const { spawn } = await import("child_process");
-  await new Promise<void>((resolve, reject) => {
-    const proc = spawn("npx", ["prisma", "db", "push", "--skip-generate"], {
-      stdio: "pipe",
-      cwd: "/home/z/my-project",
-      env: { ...process.env, DATABASE_URL: `file:${TEST_DB_PATH}` },
-    });
-    let err = "";
-    proc.stderr.on("data", (c) => { err += c.toString(); });
-    proc.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`prisma db push exited ${code}: ${err.slice(-500)}`));
-    });
-  });
+  // Override DATABASE_URL so src/lib/db.ts picks up the test DB
+  process.env.DATABASE_URL = `file:${TEST_DB_PATH}`;
 
   prisma = new PrismaClient({
     datasources: { db: { url: `file:${TEST_DB_PATH}` } },
   });
   await prisma.$connect();
+
+  // Override the global PrismaClient used by src/lib/db.ts
+  // so all imported modules use the test DB instead of the production DB
+  const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+  // Disconnect the previous global if it exists
+  if (globalForPrisma.prisma) {
+    try { await globalForPrisma.prisma.$disconnect(); } catch { /* ignore */ }
+  }
+  globalForPrisma.prisma = prisma;
+
+  // Clean any existing data so each test run starts fresh
+  await prisma.video.deleteMany({});
+  await prisma.scrapeJob.deleteMany({});
+
   return prisma;
 }
 
@@ -137,15 +153,18 @@ export async function seedFixtureVideos(client: PrismaClient): Promise<string[]>
 }
 
 /**
- * Tear down: disconnect Prisma, delete test DB.
+ * Tear down: disconnect Prisma.
  */
 export async function teardownTestDb(): Promise<void> {
   if (prisma) {
+    // Clean up data so next test run starts fresh
+    try {
+      await prisma.video.deleteMany({});
+      await prisma.scrapeJob.deleteMany({});
+    } catch { /* ignore */ }
     await prisma.$disconnect();
     prisma = null;
   }
-  try { await fs.unlink(TEST_DB_PATH); } catch { /* ignore */ }
-  try { await fs.unlink(TEST_DB_PATH + "-journal"); } catch { /* ignore */ }
 }
 
 /**
