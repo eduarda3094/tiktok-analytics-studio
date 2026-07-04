@@ -1,0 +1,80 @@
+// Prisma schema for TikTok Analytics System
+// Schema simplificado — apenas os campos que o usuário pediu.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Video {
+  id              String    @id @default(cuid())
+
+  // Identificação
+  sourceId        String?   // ID do vídeo no TikTok (item_id) — usado para evitar duplicatas
+  videoUrl        String    // URL original do TikTok (não o path local do .mp4, pois o .mp4 é excluído)
+
+  // === Métricas de engajamento (públicas, do TikTok) ===
+  videoViews      Int?
+  likes           Int?
+  comments        Int?
+  shares          Int?
+  saves           Int?
+
+  // === Autor ===
+  authorUsername  String?   // @username
+
+  // === Vídeo ===
+  duration        Int?      // segundos
+  soundName       String?
+  description     String?   // legenda / caption
+  hashtags        String?   // JSON array de strings: ["#fyp", "#viral"]
+  publishDate     DateTime?
+
+  // === Processados ===
+  ocrTitle        String?   // texto extraído do frame do segundo 2 (título)
+  ocrConfidence   Float?
+  transcript      String?
+  transcriptEngine String?  // "nvidia-nim" | "local-whisper" | "none"
+
+  // === Calculados (se videoViews > 0) ===
+  likeRate        Float?    // likes / views × 100
+  commentRate     Float?    // comments / views × 100
+  shareRate       Float?    // shares / views × 100
+
+  // === Sistema ===
+  processingStatus  String  @default("pending")  // pending | completed
+  processingError   String? // mensagens de erro específicas (OCR sem texto, etc)
+  source          String    @default("manual")  // manual | url | upload | json | ai
+  rawMetadata     String?   // JSON bruto recebido do TikTok (auditoria)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([authorUsername])
+  @@index([publishDate])
+  @@index([videoViews])
+}
+
+model ScrapeJob {
+  id          String    @id @default(cuid())
+  type        String    // "account" | "urls" | "single"
+  status      String    @default("pending") // pending | processing | completed | failed | partial
+  username    String?   // when type=account
+  urls        String    // JSON array of URLs to process
+  total       Int       @default(0)
+  completed   Int       @default(0)
+  failed      Int       @default(0)
+  videoIds    String?   // JSON array of created/updated video IDs
+  errors      String?   // JSON array of {url, error}
+  error       String?   // overall error message
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}

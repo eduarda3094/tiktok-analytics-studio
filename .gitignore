@@ -1,0 +1,76 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+bun.lockb
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database (SQLite local — não vai pro repo)
+db/
+*.db
+*.db-journal
+*.db.backup-*
+
+# Storage de vídeos temporários (são deletados após processamento)
+storage/
+
+# Logs
+dev.log
+server.log
+*.log
+mini-services/*/dev.log
+mini-services/*/server.log
+
+# Cache
+.cache/
+.turbo/
+*.pid
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Skills (não fazem parte do projeto, são assets do sandbox)
+skills/
+
+# Agent Browser (sandbox de teste)
+.tool-results/
+
+# Backups
+*.backup-*
+backups/
+
+# Prisma local cache
+.prisma/
+
+# Scripts de teste temporários
+/tmp/
+
+# Z scripts (sandbox)
+.zscripts/
+.zscripts/dev.pid
+
+# Tool results (sandbox)
+tool-results/
