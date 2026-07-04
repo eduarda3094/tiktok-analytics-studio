@@ -76,3 +76,21 @@ backups/
 tool-results/
 bun.lock
 bun.lockb
+sonarqube/
+
+# SonarQube
+sonarqube/
+.sonar/
+sonar-report/
+
+# SonarQube server + scanner (binários baixados, não vão pro repo)
+sonarqube/
+sonar-scanner-*/
+java17/
+.sonar/
+sonar-report/
+*.sonar.properties
+
+# Coverage reports (gerados em cada teste)
+coverage/
+.scannerwork/

@@ -1,0 +1,116 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  build:
+    name: Build production bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build Next.js (standalone)
+        env:
+          DATABASE_URL: file:/tmp/build.db
+          NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}
+        run: npm run build
+
+      - name: Create deployment archive
+        run: |
+          mkdir -p deployment
+          cp -r .next/standalone deployment/
+          cp -r .next/static deployment/.next/standalone/.next/
+          cp -r public deployment/.next/standalone/
+          cp -r prisma deployment/.next/standalone/
+          cp package.json deployment/.next/standalone/
+          cp .env.example deployment/.next/standalone/ || true
+          cd deployment && tar -czf ../tiktok-analytics-standalone.tar.gz .next/standalone
+
+      - name: Upload standalone artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiktok-analytics-standalone
+          path: tiktok-analytics-standalone.tar.gz
+          retention-days: 30
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download standalone artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tiktok-analytics-standalone
+
+      - name: Download SBOM
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            tiktok-analytics-standalone.tar.gz
+            sbom.spdx.json
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') }}
+
+  security-scan:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate --omit=dev || true
+
+      - name: Run audit in JSON format
+        run: npm audit --json > npm-audit.json || true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit.json
