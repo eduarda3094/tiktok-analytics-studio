@@ -45,6 +45,13 @@ export function AddVideoForm({ onAdded }: AddVideoFormProps) {
   const [runOcr, setRunOcr] = useState(true);
   const [runTranscribe, setRunTranscribe] = useState(true);
 
+  // Submit is disabled when the active tab has no input
+  const isSubmitDisabled =
+    tab === "url" ? !url.trim() :
+    tab === "upload" ? !file :
+    tab === "json" ? !jsonText.trim() :
+    true;
+
   const handleSubmit = useCallback(async () => {
     setLoading(true);
     setLastAdded(null);
@@ -227,11 +234,7 @@ export function AddVideoForm({ onAdded }: AddVideoFormProps) {
           <div className="mt-5 flex items-center gap-3">
             <Button
               onClick={handleSubmit}
-              disabled={loading || (
-                tab === "url" ? !url.trim() :
-                tab === "upload" ? !file :
-                tab === "json" ? !jsonText.trim()
-              )}
+              disabled={loading || isSubmitDisabled}
               size="lg"
               className="gap-2 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white hover:from-rose-600 hover:to-fuchsia-600"
             >

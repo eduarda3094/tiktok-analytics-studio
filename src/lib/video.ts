@@ -1,13 +1,16 @@
 /**
  * Video processing utilities for uploaded files.
- * Extracts metadata via ffprobe, saves the file to /home/z/my-project/storage/videos.
+ * Extracts metadata via ffprobe, saves the file to a local storage directory.
+ *
+ * The storage directory can be overridden via STORAGE_DIR env var (useful
+ * for tests and CI environments where /home/z/my-project doesn't exist).
  */
 
 import { spawn } from "child_process";
 import { promises as fs } from "fs";
 import path from "path";
 
-const STORAGE_DIR = "/home/z/my-project/storage/videos";
+const STORAGE_DIR = process.env.STORAGE_DIR || path.join(process.cwd(), "storage", "videos");
 
 export async function ensureStorageDir(): Promise<string> {
   await fs.mkdir(STORAGE_DIR, { recursive: true });

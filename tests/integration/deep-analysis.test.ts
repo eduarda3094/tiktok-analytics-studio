@@ -15,11 +15,17 @@ describe("deep-analysis integration", () => {
 
   beforeAll(async () => {
     await setupTestDb();
-    videoIds = await seedFixtureVideos(getTestDb());
   });
 
   afterAll(async () => {
     await teardownTestDb();
+  });
+
+  // Re-seed before each test so each test starts with the same 3 fixture videos
+  beforeEach(async () => {
+    const db = getTestDb();
+    await db.video.deleteMany({});
+    videoIds = await seedFixtureVideos(db);
   });
 
   it("returns null for non-existent video ID", async () => {

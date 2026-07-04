@@ -3,9 +3,12 @@
  *
  * Tests the full Prisma CRUD flow: create, read, update, delete videos
  * in an isolated test database.
+ *
+ * Tests run SEQUENTIALLY (not in parallel) because they share state —
+ * later tests depend on the seed data created in beforeAll.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { setupTestDb, seedFixtureVideos, teardownTestDb, getTestDb } from "../fixtures/db";
 
 describe("Video database integration", () => {
@@ -13,11 +16,17 @@ describe("Video database integration", () => {
 
   beforeAll(async () => {
     await setupTestDb();
-    videoIds = await seedFixtureVideos(getTestDb());
   });
 
   afterAll(async () => {
     await teardownTestDb();
+  });
+
+  // Re-seed before each test so each test starts with the same 3 fixture videos
+  beforeEach(async () => {
+    const db = getTestDb();
+    await db.video.deleteMany({});
+    videoIds = await seedFixtureVideos(db);
   });
 
   it("seeds 3 fixture videos", async () => {
