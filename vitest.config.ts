@@ -31,6 +31,14 @@ export default defineConfig({
     },
     setupFiles: ["./tests/setup.ts"],
     testTimeout: 30000,
+    // Run tests sequentially (not in parallel) — integration tests share
+    // the same SQLite DB and would collide if run concurrently
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
   },
   resolve: {
     alias: {

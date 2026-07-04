@@ -128,9 +128,10 @@ describe("Video database integration", () => {
 
   it("deletes a video", async () => {
     const db = getTestDb();
-    // Create then delete
+    // Create then delete (use unique ID to avoid collisions)
     const temp = await db.video.create({
       data: {
+        id: `delete-test-${Date.now()}`,
         videoUrl: "https://temp.com",
         processingStatus: "completed",
         source: "test",
@@ -143,9 +144,9 @@ describe("Video database integration", () => {
 
   it("enforces uniqueness of sourceId via application logic", async () => {
     const db = getTestDb();
-    // Try to find by sourceId — should find the first fixture video
-    // sourceId format is "111-test-{timestamp}-"
-    const firstVideo = await db.video.findFirst({ where: { authorUsername: "user1" } });
+    // Find a video that has sourceId starting with "111" (the first fixture)
+    const allVideos = await db.video.findMany();
+    const firstVideo = allVideos.find((v) => v.sourceId?.startsWith("111"));
     expect(firstVideo).toBeTruthy();
     expect(firstVideo!.sourceId).toContain("111");
 
@@ -157,8 +158,9 @@ describe("Video database integration", () => {
 
   it("parses JSON hashtags field", async () => {
     const db = getTestDb();
-    // Find a video that has hashtags (the first fixture)
-    const v = await db.video.findFirst({ where: { authorUsername: "user1" } });
+    // Find the first fixture video (sourceId starts with "111")
+    const allVideos = await db.video.findMany();
+    const v = allVideos.find((vid) => vid.sourceId?.startsWith("111"));
     expect(v).toBeTruthy();
     expect(v!.hashtags).toBeTruthy();
     const tags = JSON.parse(v!.hashtags!);
