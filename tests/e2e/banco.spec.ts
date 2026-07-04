@@ -67,7 +67,12 @@ test.describe("Banco tab", () => {
     // Wait for table rows
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
-    if (count === 0) {
+
+    // Check if the only row is the "empty state" row (no videos in DB)
+    const emptyState = page.locator("text=Nenhum vídeo encontrado");
+    const hasEmptyState = await emptyState.isVisible().catch(() => false);
+
+    if (count === 0 || hasEmptyState) {
       // CI starts with empty DB — skip this test gracefully
       test.skip();
       return;
@@ -82,7 +87,9 @@ test.describe("Banco tab", () => {
   test("modal has Visão geral and Análise profunda tabs", async ({ page }) => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
-    if (count === 0) {
+    const emptyState = page.locator("text=Nenhum vídeo encontrado");
+    const hasEmptyState = await emptyState.isVisible().catch(() => false);
+    if (count === 0 || hasEmptyState) {
       test.skip();
       return;
     }
@@ -97,7 +104,9 @@ test.describe("Banco tab", () => {
   test("deep analysis tab shows metrics", async ({ page }) => {
     const rows = page.locator("table tbody tr");
     const count = await rows.count();
-    if (count === 0) {
+    const emptyState = page.locator("text=Nenhum vídeo encontrado");
+    const hasEmptyState = await emptyState.isVisible().catch(() => false);
+    if (count === 0 || hasEmptyState) {
       test.skip();
       return;
     }
