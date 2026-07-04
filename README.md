@@ -22,13 +22,14 @@ Sistema completo de análise de vídeos TikTok com IA NVIDIA NIM, OCR de frames,
 - Tesseract OCR + ffmpeg (frame extraction)
 - NVIDIA NIM API (chat IA + ASR)
 - Whisper local (fallback de transcrição)
-- Bun (runtime + bundler)
+- Node.js + npm (runtime + gerenciador de pacotes)
 
 ## Como rodar
 
 ### 1. Pré-requisitos
 
-- Node.js 20+ ou Bun 1.0+
+- Node.js 20+
+- npm 10+ (vem com Node)
 - Python 3.10+ (para Whisper local, opcional)
 - ffmpeg + ffprobe instalados
 - Tesseract OCR instalado
@@ -44,8 +45,9 @@ brew install ffmpeg tesseract tesseract-lang
 ### 2. Instalar dependências
 
 ```bash
-bun install
-bun run db:push
+npm install
+npx prisma generate
+npx prisma db push
 ```
 
 ### 3. Configurar NVIDIA NIM API key (opcional, mas recomendado)
@@ -69,11 +71,12 @@ npx playwright install chromium
 
 ```bash
 # Dev server (porta 3000)
-bun run dev
+npm run dev
 
 # Worker de jobs em lote (porta 3031) — em outro terminal
 cd mini-services/scrape-worker
-bun run dev
+npm install
+npm run dev
 ```
 
 Acesse: http://localhost:3000
@@ -115,34 +118,33 @@ Apenas os campos necessários (27 no total):
 
 ```prisma
 model Video {
-  id              String    @id @default(cuid())
-  sourceId        String?   // ID do vídeo no TikTok
-  videoUrl        String
-  videoViews      Int?
-  likes           Int?
-  comments        Int?
-  shares          Int?
-  shares          Int?
-  saves           Int?
-  authorUsername  String?
-  duration        Int?      // segundos
-  soundName       String?
-  description     String?
-  hashtags        String?   // JSON array
-  publishDate     DateTime?
-  ocrTitle        String?   // texto do frame 2
-  ocrConfidence   Float?
-  transcript      String?
+  id               String    @id @default(cuid())
+  sourceId         String?   // ID do vídeo no TikTok
+  videoUrl         String
+  videoViews       Int?
+  likes            Int?
+  comments         Int?
+  shares           Int?
+  saves            Int?
+  authorUsername   String?
+  duration         Int?      // segundos
+  soundName        String?
+  description      String?
+  hashtags         String?   // JSON array
+  publishDate      DateTime?
+  ocrTitle         String?   // texto do frame 2
+  ocrConfidence    Float?
+  transcript       String?
   transcriptEngine String?
-  likeRate        Float?    // calculado: likes/views × 100
-  commentRate     Float?    // calculado: comments/views × 100
-  shareRate       Float?    // calculado: shares/views × 100
+  likeRate         Float?    // calculado: likes/views × 100
+  commentRate      Float?    // calculado: comments/views × 100
+  shareRate        Float?    // calculado: shares/views × 100
   processingStatus String
-  processingError String?
-  source          String
-  rawMetadata     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  processingError  String?
+  source           String
+  rawMetadata      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 ```
 

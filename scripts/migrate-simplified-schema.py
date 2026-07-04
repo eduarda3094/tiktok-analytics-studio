@@ -140,4 +140,4 @@ for c in final_cols:
     print(f"  - {c}")
 
 conn.close()
-print("\n✓ Migration concluída. Agora execute: bun run db:push")
+print("\n✓ Migration concluída. Agora execute: npm run db:push")

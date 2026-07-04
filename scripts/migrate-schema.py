@@ -165,4 +165,4 @@ with_views = cur.fetchone()[0]
 print(f"\nResultado: {total} vídeos totais, {with_views} com videoViews preenchido.")
 
 conn.close()
-print("\n✓ Migration concluída. Agora execute: bun run db:push --accept-data-loss")
+print("\n✓ Migration concluída. Agora execute: npm run db:push -- --accept-data-loss")
